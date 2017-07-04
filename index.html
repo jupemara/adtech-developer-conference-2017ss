@@ -1,0 +1,498 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>reveal.js</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/night.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section data-markdown data-separator="\n----\n" data-separator-vertical="\n--\n">
+          # GCP大航海時代の幕開け
+
+          ## Adtech Developer Conference 2017
+
+          ARASHI, Jumpei
+
+          05, Jul. 2017
+          ----
+
+          Agenda
+
+          1. Introduction
+          1. クラウドフローチャート
+          1. 僕達がG○Pに決めたたったXつの理由
+          1. Documentation
+          1. LoadBalancer
+          1. Containability
+          1. Scalability
+          1. Database
+          1. Streaming
+          1. IAM
+          1. CI
+          1. Support Service
+          1. Skyrocket on GC○
+          1. Q & A
+          --
+
+          # Introduction
+
+          --
+
+          ## おまえだれよ
+
+          --
+
+                     ![僕](srv/profile.jpg)
+
+                 (アドテク名鑑用にと言われて撮った写真です)
+
+          * twitter: @araottii
+          * Skyrocket DSP(名付け親募集中です)ソフトウェアエンジニア
+          * 無料で使えるクラウドサービスとスクレイピングが趣味です
+          * 家ではよくNodeJSを書いてます
+
+          --
+
+          ## 本日の発表について
+
+          1. 僕/私のクラウド選定
+          1. GCP vs AWS
+          1. Skyrocket Architecture
+          1. Q & A
+
+          <!--
+          1. クラウド選定の全体像をざっくりと話します。AWSとGCPの特徴をざっくりと踏まえて、こういう時はこっちでいいんじゃないかなってケースとか。
+          僕達が3週間ほど時間をかけて、クラウド選定をした過程と結果も一緒に話せればと思います。
+          2. GCPとAWSの各種サービスの比較を行います。ネットでも割りとGCPでいうこのサービスはAWSならこれ、みたいな話はあると思うんですが、
+          どちらかというと各コンポーネントのよかったところ、悪かったところ、GCPの中の人が計測したところなどなど
+          3. 最後に僕達の全体アーキテクチャ図を見てもらってだいたいこんな感じですかねってのを掴んでもらえればなーと思います。
+          勘所とか
+          4. 質疑応答コーナーです！
+          また最後にスライドのURLをトークスクリプトと一緒に上げておくので、もしスライドの写真とか取りたくなっても後で見れるのでまったり見てもらえればOKですよ。
+          -->
+
+          ----
+
+          # クラウド
+          # フローチャート
+
+          --
+
+          --
+
+          ## まとめ
+
+          --
+
+
+          ----
+
+          # GCP vs AWS
+
+          ----
+
+          # Documentation
+
+          --
+
+          ## AWS
+
+          <!--
+          だいたいそろってます。ローンチに合わせてだいたいのドキュメンテーションは揃ってる模様。
+          ただし、APIとして提供されてないけど、コンソールからは操作できるみたいなものはドキュメンテーションには書いてないです。
+          例えば、RDSで言うと同じリージョン、同じAZにレプリカを作るAPIのパラメータは書いてなかったです。
+          結局サポートに問い合わせたら答えが返ってきました(SAの人も知らなかった)。
+          -->
+
+          --
+
+          ## GCP
+
+          --
+
+          * [https://cloud.google.com/spanner/]()
+          * [https://cloud.google.com/spanner/**?hl=ja**]()
+
+          <!--
+          こんな感じで、他のgoogleのサービス(例えば私はロボットではありませんで有名なgoogle recaptcha APIのように)と同様に、
+          hl=言語コードを使えば各種言語のドキュメンテーションが読めます。
+          ただ、英語以外のドキュメンテーションはどうやら遅れているようで、サービスはGAなのにspannerの日本語ドキュメントはBETAのまま、
+          Google Cloud CDNはGAなのにAlphaになってました笑 僕達も勘違いしてSAの人に問い合わせたくらいです笑
+          僕の個人の読解能力、目指すところにもよりますが、ドキュメンテーションのget startをやっても何もわかりませんでした笑
+          また、REST APIのドキュメンテーション(ほとんどの人は各言語のgoogle SDKを使うと思いますが)とは別に別れているので、deploy用のbotとかを作る時はちょい苦労しました(してます)。
+          -->
+
+          ----
+
+          # CLI
+
+          --
+
+          ## aws-cli
+
+          <!--
+          みなさんご存知のaws-cliです。configureで ${HOME}/.aws/ 配下にクレデンシャルが保存されますが、
+          平文で普通に保存されますよっと笑。
+          また brew install awscli できるのも悪い話ではないと思います。
+          -->
+
+          --
+
+          ## gcloud
+
+          --
+
+          ```bash
+          gcloud COMPONENT SUB_COMPONENT OPERATION
+          ```
+
+          <!--
+          gcloudコマンドの後ろにCOMPONENT、サブコンポーネント、オペレーションと続きます。
+          completion.bash, completion.zshがコマンドラインパッケージに同梱されているので、各種rcに読み込ませればいい感じです。
+          ただ brew-cask にしかパッケージがないので
+          -->
+
+          --
+
+          ```bash
+          brew install Caskroom/gcloud
+          ```
+
+          <!--
+          となってしまうのはやや残念です。
+          -->
+
+          ----
+
+          # IAM (Authentication)
+
+          --
+
+          ## AWS
+
+          <!--
+          各種APIを使う際の認証は、access key/secret key方式になっていて、integrationは何かと簡単。
+          -->
+
+          --
+
+          ```bash
+          export AWS_ACCESS_KEY_ID=xxx
+          export AWS_SECRET_ACCESS_KEY=yyy
+          ```
+
+          <!--
+          これだけで認証が完了ってのはお手軽でいいですね。circleci上でaws-cliを使いたい時も便利です。
+          -->
+
+          --
+
+          ### IAM role
+
+          <!--
+          サーバロールってのがあって、サーバに対してロールをくっつけることができるので、認証をサーバやコンテナに対して直接インジェクトする必要がなくていいです。
+          またlambda functionにもくっつけることができるので、認証のスコープをいろんなところに使いまわせるのはなかなかよいですね。
+          -->
+
+          --
+
+          ## GCP
+
+          <!--
+          AWSのようなaccess key/secret key方式ではなく、OAuth認証または秘密鍵認証を使います。なのでcircleciなどの外部サービスで認証を行う際は
+          例えばcircleciのドキュメンテーションに掲載されている方法だと、base64で鍵のjsonファイルをエンコードしたものを環境変数に入れて、
+          circleciのyamlファイルのなかで環境変数をbase64でデコードするっていう闇の方法が取られていますｗ
+          -->
+
+          --
+
+          ```bash
+          # e.g: $HOME/secret/google-credential.json
+          export GOOGLE_APPLICATION_CREDENTIALS=PATH_TO_CREDENTIAL.json
+          ```
+
+          <!--
+          この手法のように対象の認証ファイルへのパスを管理します。その影響でAWSへのように認証をIAM Roleに任せることが上手にインテグレーションできていない部分もあって、
+          例えばAWSならIAM roleをサーバにくっつけるとその上で動いてるcontainerもIAM Roleが使えるようになってますが、
+          GCPだとcontainerに認証ファイルを入れてあげるっていう作業が必要になります。
+          個人的には何かのセキュリティインシデントでcontainerをダウンロードされたら終了ってのは結構危ないところもあるなーって思っています。
+          ただ、container上からOAuthのバーザートークンはcurlで取得できるので、今後の実装に期待(´∀｀∩)↑age↑って感じですね。
+          -->
+
+          --
+
+          ### Authorization
+
+          <!--
+          GCPにはCloud IAMという機能がありますが、例えばAWSならs3のこのパスだけGetObjectできる権限みたいな形で、
+          かなり細い粒度で権限設定を行うことができますが、
+          GCPだと、spanner管理者、spannerデータリード、spannerデータリードライトみたいなざっくりした権限設定を先述の
+          鍵jsonファイルにくっつける形になるので、例えば本番のDBに書き込めない権限みたいなのはひとつのGCPアカウントだとできないです。
+          ただここも今後の予定には一応あるらしいので、細い権限をくっつけた権限セットをjson鍵にくっつけるみたいなことができるように期待(´∀｀∩)↑age↑って感じですね。
+          -->
+
+          ----
+
+          # LoadBalancer
+
+          ----
+
+          # Containability
+
+          --
+
+          ## ElasticBeanstalk(ECS)
+          ## VS
+          ## GoogleContainerEngine
+
+          --
+
+          Deploybility
+
+          --
+
+          <!--
+          ElasticBeanstalkまたはECSではversionファイルを名前付きでAWS側に保存することで(実質的にはS3に保存される)、APIを呼び出す際に、
+          そのversionをエイリアス的に使用することが可能です。
+          ただ、逆にregion1のversionファイルをregion2にデプロイすることはできないので、国をまたいだサービスを行う際は、CIなので、複数のリージョンに
+          versionファイルをあげるとかやって、一工夫してあげる必要があります。
+
+          一方、GKEは実質的にkurbernetesなので一枚の設定ファイルを使いまわしたり、APIのパラメータでdeployするコンテナをパタパタ変更したりということが可能になります。
+          ただversionファイルがないので、どうしてもほぼおなじ設定のyamlファイルやjsonファイルを複数作成することになってしまうっていうデメリットもあります。
+          また他のregionにdeployしたいときも同じ設定ファイル渡しつつ、--locationsみたいなパラメータを渡せば、複数のregionに一気にcontainer clusterをdeployして、
+          その上にkubernetes clusterを作成することが可能です。
+          ただ、k8sである以上、GKEのAPIとk8sのAPIの両方を叩く必要があるので、chatopsする時は、両方のAPIまたはSDKを使うっていうコストは発生するかなと思っています。
+          --->
+
+          --
+
+          ```bash
+          gcloud container clusters create --additional-zones us-central1-b,us-central1-c
+          ```
+
+          <!--
+          こんな感じでコマンド一発でマルチリージョンクラスターを作成できるのは結構驚異的だなと感じています。考え方的には、
+          kubenetes clusterをサーバで立てて、それを器にしてcontainerのclusterをdeployするって感じですね。
+          -->
+
+          --
+
+          Customizable
+
+          <!--
+          ElasticBeanstalkには.ebextensionsというファイルにyaml形式で設定を書いたり実行するコマンドを書くことで、
+          deployのフックでホスト側を操作することができます。ただこれは結構やらないほうがいいかなと個人的には思っていて、
+          テストもできないし、実際にやってみないとわからないし、変更が入った時に正しく動くかどうかというところは結構危ないかなーと思っています。
+          僕はこの.ebextensionsを使ってホスト側のnginxの設定を作ったり、gzip圧縮を入れたりしましたが、闇を生み出してしまったなと思っているので、
+          今はもう使われていないことを祈っていますｗ
+
+          他方、GCPではk8s clusterを操作することしかできないので、ホスト側で何かするっていうよりは、別のcontainerを立ててそいつをexposeしましょう
+          って考えだとおもいます。個人的にはこっちの方が健全だと思いますがね！！
+          また、ホスト側の情報にアクセスしたい際にはAWS同様metadata 169.254.169.254を使ってホストのIPとかホストの情報にはアクセスできるので、
+          ホスト側の情報をREADするだけなら、それを使うって手もあります。
+          -->
+
+          --
+
+          Networking
+
+          <!--
+          コンテナ同士のリンクには通常docker linkを使って、namebaseでコンテナの名前解決を行うと思います。
+          AWSでもEB,ECSはこの方法を設定ファイルに書くことによって、container同士のリンクを実現しています。
+          ただ、個人的にはこの方法、設定ファイルにlink先のcontainer名を書くので、例えばnginxのreverse proxyの後ろにapplicationのcontainer
+          がいるみたいなケースだと、nginxのconfigにもlink先のcontainer名を書くことになるので、二重管理が面倒かなって思っています。
+
+          他方、GCPっというかkubernetesでは間に一枚仮想ネットワーク層が挟まってるおかげで、ネットワーク空間をフラットに扱うことができます。
+          ポート番号がかぶることができないという問題はありますが、別のコンテナから127.0.0.1:8080みたいな形でアクセスできるのは
+          思っている以上に便利です。
+          -->
+
+          ----
+
+          # Scalability
+
+          ----
+
+          # Database
+
+          --
+
+          ## Spanner
+
+          <!--
+          はっきり言って最強です。
+          イメージ的にはAWSオーロラとDynamoDBをくっつけたような感じですね。
+          基本的な考え方はRDBに近いです。schemaやindexをSQL(create recordや、create index)文を使って作成します。
+          APIで定義することももちろん可能ですが。
+          ただ外部キーを明確に定義するというよりは考え方的にはDynamoDBのセカンダリインデックスのように近いです。
+          -->
+
+          --
+
+          ### Index
+
+          <!--
+          spannerのIndexは主キー以外のキーを複数個組み合わせてSELECTが行えるものです。
+          -->
+
+          --
+
+          ### テーブル図を書く
+
+          <!--
+          例えば上記のようなテーブルがある時に、INDEXのキーを複合プライマリーキーのように検索に使えます。
+          -->
+
+          --
+
+          #### STORING
+
+          ```sql
+          SELECT 1
+          ```
+
+          <!--
+          STORINGはspannerの特殊機能のひとつで、INDEXにどのカラムを保存するかというキャッシュみたいな機能です。
+          当然ですが、すべてのカラムを保存すればストレージ容量で課金額が増えますし、少ないカラムで行えば、
+          INDEXのデータ量は少なくなります。
+          -->
+
+          --
+
+          ### Interleave
+
+          <!--
+          テーブルに親子関係を作ることで、各テーブル同士のJOIN後の結果を同じNODEに保存することができます。
+          このメリットは非正規化した大きなレコードを正規化して管理ができるという夢のような機能です。
+          また、JOINのコストを無視してSQLを投げられるので、PKでSELECTすれば、
+          データアクセスパターンとしては実質的にKVSのような速度が実現できます。
+          ここで実際の速度を提示したかったのですが、現在GCPのサポートエンジニアの方に4つのテーブルをInterleaveした状態での
+          SELECT速度がいかなもんかを実測してもらってます。
+          -->
+
+          --
+
+          ## Writing Speed
+
+          --
+
+          グラフ貼り付ける
+
+          <!--
+          これはGCPの中の人が検証してくれた結果ですが、秒間1000とか2000書き込みでもガンガンいけます。
+          -->
+
+          --
+
+          ### Warning
+
+          <!--
+          ただなんでもかんでも最強というわけではなく、デメリットも存在します。
+          -->
+
+          --
+
+          ### 1.PKは変更できません
+
+          <!--
+          PKはmigrationによって変更することができないので、複合PKを作るのはやめておいたほうがいいかもしれませんｗ
+          PKはひとつにしておいて、INDEXでマルチカラムユニークキーを生成して、INDEXからSELECTする方が筋がいいかなと思ったりしています。
+          -->
+
+          --
+
+          ### 2.Indexの変更は数時間かかります
+
+          <!--
+          Indexの変更にはかなり時間かかります。
+          運用方法としては、
+          1.新しい名前でINDEXを作成する。
+          2.作成できたら新しいINDEXを使ってるアプリケーションをdeployする
+          3.古いINDEXを削除する
+          という形で実質的なIndexの変更が可能です。っというよりIndex自体は直接変更することはできないです(仕様)。
+          -->
+
+          ----
+
+          # Streaming
+
+          <!--
+          AWSでいうkinesisの一番のネックは、みなさんご存知の通り、shardを手動で管理する必要があるってことです。
+          正直めんどくさいし、稀にアプリケーションをrestartしないと新しいshardからのreadが遅延することもあります。
+          (サポートに聞いてもわからんと言われましたがｗ)
+          ただKCLは優秀ですし、何よりkinesis firehoseを使ってconsumerアプリケーションを事実上書かなくてもいいっていうメリットや、
+          kinesis analyticsを使ってstream内のデータに対してSQLで簡易分析できるっていうのもなかなかのメリットでもあると思います。
+          また、最近kafkaで発表されたexactly onceもそのうちkinesisに来るんじゃないかと個人的には思っているので
+          (SAの人曰くmanagement kafkaとのこと)、stream処理でexactly onceができるようになれば、二重書き込みの心配をしなくてもよくなるので、
+          streamデータがほぼそのままデータベースに格納可能な非同期に取り扱えるデータということになるでしょう。
+
+          他方、GCPではgoogle cloud PubSubというサービスがあります。
+          これのすごいところは、ただただひとつ、アカウント全体でregion freeな、どのregionからでもアクセス可能なグローバルのひとつstreamを提供してくれる
+          ということです。当然、負荷状況に合わせてsplit shardする必要もないってのはすんげぇところですね。
+          ただstreamからのintegrationはAWSほど発展してるってわけではなくて、例えばstreamデータに対してETLを行うcloud dataflowは
+          いまんとこjavaとpythonしかありません(これはバックエンドにapache beamが使われている影響でもありますが)。
+          緩和申請無しでどんどんscaleしていってくれるっていうのは、余剰のshardコストを払わなくてもいいし、何より管理コストが圧倒的に低いです。
+          -->
+
+          ----
+
+          # CI
+
+          ----
+
+          # Support Service
+
+          ----
+
+          # Skyrocket Architecture
+
+          ----
+
+          # Q & A
+
+          ----
+
+          # 本日の資料置き場
+
+
+        </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				history: true,
+
+				// More info https://github.com/hakimel/reveal.js#dependencies
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
